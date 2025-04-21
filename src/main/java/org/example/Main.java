@@ -1,11 +1,11 @@
 package org.example;
-import org.example.services.WeatherService;
+import org.example.services.impl.WeatherServiceImpl;
 
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        WeatherService weatherService = new WeatherService();
+        WeatherServiceImpl weatherService = new WeatherServiceImpl();
         Scanner scanner = new Scanner(System.in, "UTF-8");
 
         while (true) {
@@ -21,7 +21,7 @@ public class Main {
         }
 
         System.out.println("\nИстория запросов:");
-        weatherService.getWeatherRepository().getWeatherHistory().forEach((city, temperature) ->
+        weatherService.getWeatherHistory().forEach((city, temperature) ->
                 System.out.println(city + ": " + temperature));
 
         scanner.close();
