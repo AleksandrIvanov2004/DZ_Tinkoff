@@ -2,6 +2,7 @@ package org.example.services.impl;
 
 import org.example.exceptions.InvalidCityNameException;
 import org.example.repositories.impl.WeatherRepositoryImpl;
+import org.example.repositories.WeatherRepository;
 import org.example.services.WeatherService;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Random;
 public class WeatherServiceImpl implements WeatherService {
     private static final int MIN_TEMP = -50;
     private static final int MAX_TEMP = 50;
-    private final WeatherRepositoryImpl weatherRepository = new WeatherRepositoryImpl();
+    private final WeatherRepository weatherRepository = new WeatherRepositoryImpl();
     Random random = new Random();
 
    @Override

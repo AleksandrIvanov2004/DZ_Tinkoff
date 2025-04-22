@@ -1,11 +1,12 @@
 package org.example;
 import org.example.services.impl.WeatherServiceImpl;
+import org.example.services.WeatherService;
 
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        WeatherServiceImpl weatherService = new WeatherServiceImpl();
+        WeatherService weatherService = new WeatherServiceImpl();
         Scanner scanner = new Scanner(System.in, "UTF-8");
 
         while (true) {
