@@ -7,9 +7,9 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         WeatherService weatherService = new WeatherServiceImpl();
-        Scanner scanner = new Scanner(System.in, "UTF-8");
 
-        while (true) {
+        try (Scanner scanner = new Scanner(System.in, "UTF-8")) {
+            while (true) {
                 System.out.print("\nВведите название города (или 'выход' для завершения): ");
                 String city = scanner.nextLine().trim();
 
@@ -17,14 +17,13 @@ public class Main {
                     break;
                 }
 
-               weatherService.processForecast(city);
+                weatherService.processForecast(city);
+            }
 
+            System.out.println("\nИстория запросов:");
+            weatherService.getWeatherHistory().forEach((c, temps) ->
+                    System.out.printf("%s: %s (всего запросов: %d)%n",
+                            c, temps, weatherService.getRequestCount(c)));
         }
-
-        System.out.println("\nИстория запросов:");
-        weatherService.getWeatherHistory().forEach((city, temperature) ->
-                System.out.println(city + ": " + temperature));
-
-        scanner.close();
     }
 }

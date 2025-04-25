@@ -9,4 +9,5 @@ public interface WeatherService {
     void processForecast(String city);
     Map<String, List<Integer>> getWeatherHistory();
     void validateCityName(String city) throws InvalidCityNameException;
+    int getRequestCount(String city);
 }
