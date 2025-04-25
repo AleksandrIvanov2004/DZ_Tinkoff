@@ -9,22 +9,14 @@ import javax.sql.DataSource;
 
 public class WeatherRepositoryImpl implements WeatherRepository {
     private final DataSource dataSource;
-
-    public WeatherRepositoryImpl(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    @Override
-    public void addForecast(String city, int temperature) {
-        String citySql = """
+    private final String citySql = """
             INSERT INTO cities (name) VALUES (?) 
             ON CONFLICT (name) DO NOTHING
             RETURNING id
             """;
+    private final String forecastSql = "INSERT INTO forecasts (city_id, temperature, date) VALUES (?, ?, ?)";
 
-        String forecastSql = "INSERT INTO forecasts (city_id, temperature, date) VALUES (?, ?, ?)";
-
-        String counterSql = """
+    private final String counterSql = """
             INSERT INTO request_counter (city_id, request_count, last_access_datetime)
             VALUES (?, 1, CURRENT_TIMESTAMP)
             ON CONFLICT (city_id) DO UPDATE SET 
@@ -32,41 +24,84 @@ public class WeatherRepositoryImpl implements WeatherRepository {
                 last_access_datetime = CURRENT_TIMESTAMP
             """;
 
+    private final String forecastsAndCitiesSql = """
+            SELECT c.name, f.temperature 
+            FROM forecasts f
+            JOIN cities c ON f.city_id = c.id
+            ORDER BY f.date DESC, c.name
+            LIMIT 100
+            """;
+
+    private final String countSql = """
+            SELECT rc.request_count 
+            FROM request_counter rc
+            JOIN cities c ON rc.city_id = c.id
+            WHERE c.name = ?
+            """;
+
+    private final String findCity = "SELECT id FROM cities WHERE name = ?";
+
+    public WeatherRepositoryImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    @Override
+    public int getCityId(Connection conn, String city) {
+        int cityId;
+            try (PreparedStatement cityStmt = conn.prepareStatement(citySql)) {
+                cityStmt.setString(1, city);
+                ResultSet rs = cityStmt.executeQuery();
+                if (rs.next()) {
+                    cityId = rs.getInt("id");
+                    return cityId;
+                } else {
+                    try (PreparedStatement selectStmt = conn.prepareStatement(
+                            findCity)) {
+                        selectStmt.setString(1, city);
+                        ResultSet selectRs = selectStmt.executeQuery();
+                        if (!selectRs.next()) {
+                            throw new SQLException("Город не найден");
+                        }
+                        cityId = selectRs.getInt("id");
+                        return cityId;
+                    }
+                }
+            } catch (SQLException e){
+                throw new RuntimeException("Database error", e);
+            }
+
+    }
+
+    @Override
+    public void insertForecast(Connection conn, String city, int temperature){
+            try (PreparedStatement forecastStmt = conn.prepareStatement(forecastSql)) {
+                forecastStmt.setInt(1, getCityId(conn, city));
+                forecastStmt.setInt(2, temperature);
+                forecastStmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                forecastStmt.executeUpdate();
+            } catch (SQLException e) {
+            throw new RuntimeException("Database error", e);
+        }
+    }
+
+    @Override
+    public void countStmt(Connection conn, String city) {
+            try (PreparedStatement counterStmt = conn.prepareStatement(counterSql)) {
+                counterStmt.setInt(1, getCityId(conn, city));
+                counterStmt.executeUpdate();
+            } catch (SQLException e) {
+            throw new RuntimeException("Database error", e);
+            }
+    }
+
+    @Override
+    public void addForecast(String city, int temperature) {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
 
             try {
-                int cityId;
-                try (PreparedStatement cityStmt = conn.prepareStatement(citySql)) {
-                    cityStmt.setString(1, city);
-                    ResultSet rs = cityStmt.executeQuery();
-                    if (rs.next()) {
-                        cityId = rs.getInt("id");
-                    }
-                    else {
-                        try (PreparedStatement selectStmt = conn.prepareStatement(
-                                "SELECT id FROM cities WHERE name = ?")) {
-                            selectStmt.setString(1, city);
-                            ResultSet selectRs = selectStmt.executeQuery();
-                            if (!selectRs.next()) {
-                                throw new SQLException("Город не найден");
-                            }
-                            cityId = selectRs.getInt("id");
-                        }
-                    }
-                }
-
-                try (PreparedStatement forecastStmt = conn.prepareStatement(forecastSql)) {
-                    forecastStmt.setInt(1, cityId);
-                    forecastStmt.setInt(2, temperature);
-                    forecastStmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
-                    forecastStmt.executeUpdate();
-                }
-
-                try (PreparedStatement counterStmt = conn.prepareStatement(counterSql)) {
-                    counterStmt.setInt(1, cityId);
-                    counterStmt.executeUpdate();
-                }
+                insertForecast(conn, city, temperature);
+                countStmt(conn, city);
 
                 conn.commit();
 
@@ -82,19 +117,11 @@ public class WeatherRepositoryImpl implements WeatherRepository {
 
     @Override
     public Map<String, List<Integer>> getWeatherHistory() {
-        String sql = """
-            SELECT c.name, f.temperature 
-            FROM forecasts f
-            JOIN cities c ON f.city_id = c.id
-            ORDER BY f.date DESC, c.name
-            LIMIT 100
-            """;
-
         Map<String, List<Integer>> history = new LinkedHashMap<>();
 
         try (Connection conn = dataSource.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(forecastsAndCitiesSql);
+             ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 String city = rs.getString("name");
@@ -110,15 +137,8 @@ public class WeatherRepositoryImpl implements WeatherRepository {
 
     @Override
     public int getRequestCount(String city) {
-        String sql = """
-            SELECT rc.request_count 
-            FROM request_counter rc
-            JOIN cities c ON rc.city_id = c.id
-            WHERE c.name = ?
-            """;
-
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(countSql)) {
 
             stmt.setString(1, city);
             ResultSet rs = stmt.executeQuery();
