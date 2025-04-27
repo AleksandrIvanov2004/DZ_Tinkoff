@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+
+  local-storage:
+    image: postgres:16-alpine3.19
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'sasha2004'
+      POSTGRES_DB: 'weather_db'
+    ports:
+      - '5432:5432'
