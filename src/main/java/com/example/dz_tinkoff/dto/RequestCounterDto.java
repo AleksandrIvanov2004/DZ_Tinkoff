@@ -1,38 +1,13 @@
 package com.example.dz_tinkoff.dto;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
+@Data
+@AllArgsConstructor
 public class RequestCounterDto {
-    private Long city_id;
-    private int request_count;
-    private Timestamp last_access_datetime;
-
-    public RequestCounterDto(Long city_id, int request_count, Timestamp last_access_datetime) {
-        this.city_id = city_id;
-        this.request_count = request_count;
-        this.last_access_datetime = last_access_datetime;
-    }
-
-    public Long getCityId() {
-        return city_id;
-    }
-
-    public int getRequestCount() {
-        return request_count;
-    }
-
-    public Timestamp getLastAccessDatetime() { return last_access_datetime; }
-
-    public void setCityId(Long city_id) {
-        this.city_id = city_id;
-    }
-
-    public void setRequestCount(int request_count) {
-        this.request_count = request_count;
-    }
-
-    public void setLastAccessDatetime(Timestamp last_access_datetime) {
-        this.last_access_datetime = last_access_datetime;
-    }
+    private Long cityId;
+    private int requestCount;
+    private Timestamp lastAccessDatetime;
 }

@@ -5,13 +5,18 @@ import com.example.dz_tinkoff.entity.ForecastEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import java.util.Random;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class ForecastRepository {
     private final JdbcTemplate jdbcTemplate;
+    private static final int MIN_TEMP = -50;
+    private static final int MAX_TEMP = 50;
+    Random random = new Random();
 
     public ForecastRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -24,31 +29,25 @@ public class ForecastRepository {
                     rs.getTimestamp("date")
             );
 
-    public List<ForecastEntity> getAll() {
-        return jdbcTemplate.query("SELECT * FROM forecast", forecastRowMapper);
-    }
+    @Transactional
+    public void getByName(String name) {
+        jdbcTemplate.update( "INSERT INTO city (name) " +
+                "SELECT ? WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = ?)", name, name);
 
-    public ForecastEntity getById(Long id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM forecast WHERE id = ?", forecastRowMapper, id);
-    }
+        Integer cityId = jdbcTemplate.queryForObject("SELECT id FROM city WHERE name = ?", Integer.class, name);
 
-    public void save(ForecastEntity forecastEntity) {
-        jdbcTemplate.update("INSERT INTO forecast (city_id, temperature, date) VALUES (?, ?, ?) ", forecastEntity.getCityId(),
-                forecastEntity.getTemperature(), LocalDateTime.now());
+        jdbcTemplate.update("INSERT INTO forecast (city_id, temperature, date) VALUES (?, ?, ?) ", cityId,
+                random.nextInt(MAX_TEMP - MIN_TEMP + 1) + MIN_TEMP, LocalDateTime.now());
 
         jdbcTemplate.update(
                 "UPDATE request_counter SET request_count = request_count + 1, " +
                         "last_access_datetime = CURRENT_TIMESTAMP WHERE city_id = ?",
-                forecastEntity.getCityId());
+                cityId);
 
         jdbcTemplate.update(
                 "INSERT INTO request_counter(city_id, request_count, last_access_datetime) " +
                         "SELECT ?, 1, CURRENT_TIMESTAMP WHERE NOT EXISTS " +
                         "(SELECT 1 FROM request_counter WHERE city_id = ?)",
-                forecastEntity.getCityId(), forecastEntity.getCityId());
-    }
-
-    public void deleteById(Long id) {
-        jdbcTemplate.update("DELETE FROM forecast WHERE id =?", id);
+                cityId, cityId);
     }
 }

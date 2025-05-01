@@ -25,9 +25,4 @@ public class RequestCounterRepository {
     public List<RequestCounterEntity> getAll() {
         return jdbcTemplate.query("SELECT * FROM request_counter", requestCounterEntityRowMapper);
     }
-
-    public RequestCounterEntity getByCityId(Long city_id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM request_counter WHERE city_id = ?",
-                requestCounterEntityRowMapper, city_id);
-    }
 }

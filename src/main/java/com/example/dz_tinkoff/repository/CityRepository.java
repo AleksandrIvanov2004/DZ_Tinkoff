@@ -23,21 +23,4 @@ public class CityRepository {
             new CityEntity(rs.getLong("id"),
                     rs.getString("name")
             );
-
-    public List<CityEntity> getAll() {
-        return jdbcTemplate.query("SELECT * FROM city", cityRowMapper);
-    }
-
-    public CityEntity getById(Long id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM city WHERE id = ?", cityRowMapper, id);
-    }
-
-    public void save(CityEntity cityDto) {
-        jdbcTemplate.update( "INSERT INTO city (name) " +
-                "SELECT ? WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = ?)", cityDto.getName(), cityDto.getName());
-    }
-
-    public void deleteById(Long id) {
-        jdbcTemplate.update("DELETE FROM city WHERE id =?", id);
-    }
 }

@@ -19,9 +19,4 @@ public class RequestCounterController {
     public List<RequestCounterDto> getRequestCounters(){
         return weatherService.getRequestCounters();
     }
-
-    @GetMapping("/request_counter/{city_id}")
-    public RequestCounterDto getRequestCounter(@PathVariable Long city_id){
-        return weatherService.getRequestCounter(city_id);
-    }
 }

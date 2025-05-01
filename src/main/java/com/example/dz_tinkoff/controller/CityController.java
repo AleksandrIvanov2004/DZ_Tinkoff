@@ -14,24 +14,4 @@ public class CityController {
     public CityController(WeatherService weatherService) {
         this.weatherService = weatherService;
     }
-
-    @GetMapping("/cities")
-    public List<CityDto> getCities(){
-        return weatherService.getCities();
-    }
-
-    @GetMapping("/city/{id}")
-    public CityDto getCity(@PathVariable Long id){
-        return weatherService.getCity(id);
-    }
-
-    @PostMapping("/city")
-    public void createCity(@RequestBody CityDto cityDto){
-        weatherService.createCity(cityDto);
-    }
-
-    @DeleteMapping("/city/{id}")
-    public void deleteCity(@PathVariable Long id){
-        weatherService.deleteCity(id);
-    }
 }
