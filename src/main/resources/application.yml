@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    username: postgres
+    password: sasha2004
+    url: jdbc:postgresql://localhost:5432/weather_db
+    driver-class-name: org.postgresql.Driver
+  application:
+    name: demo
+
+
+app:
+  cred: # в реальном мире всякие токены просто так в проперти не лежат, но возможности вынести их пока нет
+    token: PASSWORDTOKENTOPSECRET
+
