@@ -25,4 +25,15 @@ public class RequestCounterRepository {
     public List<RequestCounterEntity> getAll() {
         return jdbcTemplate.query("SELECT * FROM request_counter", requestCounterEntityRowMapper);
     }
+
+    public void updateRequestsByCityId(long cityId){
+        jdbcTemplate.update(
+                "INSERT INTO request_counter(city_id, request_count, last_access_datetime) " +
+                        "VALUES (?, 1, CURRENT_TIMESTAMP) " +
+                        "ON CONFLICT (city_id) DO UPDATE SET " +
+                        "request_count = request_counter.request_count + 1, " +
+                        "last_access_datetime = CURRENT_TIMESTAMP",
+                cityId
+        );
+    }
 }

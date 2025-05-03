@@ -29,25 +29,9 @@ public class ForecastRepository {
                     rs.getTimestamp("date")
             );
 
-    @Transactional
-    public void getByName(String name) {
-        jdbcTemplate.update( "INSERT INTO city (name) " +
-                "SELECT ? WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = ?)", name, name);
-
-        Integer cityId = jdbcTemplate.queryForObject("SELECT id FROM city WHERE name = ?", Integer.class, name);
-
+    public void getByCityId(long cityId) {
         jdbcTemplate.update("INSERT INTO forecast (city_id, temperature, date) VALUES (?, ?, ?) ", cityId,
                 random.nextInt(MAX_TEMP - MIN_TEMP + 1) + MIN_TEMP, LocalDateTime.now());
 
-        jdbcTemplate.update(
-                "UPDATE request_counter SET request_count = request_count + 1, " +
-                        "last_access_datetime = CURRENT_TIMESTAMP WHERE city_id = ?",
-                cityId);
-
-        jdbcTemplate.update(
-                "INSERT INTO request_counter(city_id, request_count, last_access_datetime) " +
-                        "SELECT ?, 1, CURRENT_TIMESTAMP WHERE NOT EXISTS " +
-                        "(SELECT 1 FROM request_counter WHERE city_id = ?)",
-                cityId, cityId);
     }
 }

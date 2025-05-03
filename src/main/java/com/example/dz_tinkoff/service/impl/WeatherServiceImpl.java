@@ -18,9 +18,10 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -36,8 +37,12 @@ public class WeatherServiceImpl implements WeatherService {
 
 
     @Override
-    public void getForecast(String name) {
-        forecastRepository.getByName(name);
+    @Transactional
+    public void getForecast(String cityName) {
+        cityRepository.addCity(cityName);
+        long cityId = cityRepository.getCityIdByName(cityName);
+        forecastRepository.getByCityId(cityId);
+        requestCounterRepository.updateRequestsByCityId(cityId);
     }
 
     @Override
