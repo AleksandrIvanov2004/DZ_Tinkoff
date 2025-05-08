@@ -40,14 +40,14 @@ public class WeatherServiceImpl implements WeatherService {
     @Transactional
     public void getForecast(String cityName) {
         cityRepository.addCity(cityName);
-        long cityId = cityRepository.getCityIdByName(cityName);
-        forecastRepository.getByCityId(cityId);
-        requestCounterRepository.updateRequestsByCityId(cityId);
+        CityEntity cityEntity = cityRepository.getCityByName(cityName);
+        forecastRepository.getForecast(cityEntity);
+        requestCounterRepository.updateRequestsByCityId(cityEntity);
     }
 
     @Override
     public List<RequestCounterDto> getRequestCounters() {
-        List<RequestCounterEntity> requestCounterEntities = requestCounterRepository.getAll();
+        List<RequestCounterEntity> requestCounterEntities = requestCounterRepository.findAll();
         return requestCounterEntities.stream()
                 .map(requestCounterMapper::mapToDto)
                 .collect(Collectors.toList());
