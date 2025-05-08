@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS city (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS forecast (
+    id BIGSERIAL PRIMARY KEY,
+    city_id BIGINT NOT NULL REFERENCES city(id),
+    temperature INTEGER NOT NULL,
+    date TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS request_counter (
+    city_id BIGINT PRIMARY KEY REFERENCES city(id),
+    request_count INTEGER DEFAULT 1,
+    last_access_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
