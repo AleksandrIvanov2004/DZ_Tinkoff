@@ -1,5 +1,6 @@
 package com.example.dz_tinkoff.controller;
 
+import com.example.dz_tinkoff.dto.ForecastDto;
 import com.example.dz_tinkoff.service.WeatherService;
 
 import jakarta.validation.ConstraintViolation;
@@ -16,8 +17,7 @@ import jakarta.validation.Validator;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -47,12 +47,15 @@ class ForecastControllerTest {
     }
 
     @Test
-    void getForecastValidCityNameCallsService() {
+    void getForecastValidCityNameCallsServiceAndReturnsResult() {
         String validCityName = "Москва";
+        ForecastDto expectedDto = new ForecastDto(null, null, 0, null);
+        when(weatherService.getForecast(validCityName)).thenReturn(expectedDto);
 
-        forecastController.getForecast(validCityName);
+        ForecastDto result = forecastController.getForecast(validCityName);
 
         verify(weatherService, times(1)).getForecast(validCityName);
+        assertEquals(expectedDto, result);
     }
 
     @Test

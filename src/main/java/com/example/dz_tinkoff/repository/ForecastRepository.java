@@ -8,21 +8,16 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Random;
 
 @Repository
 public interface ForecastRepository extends JpaRepository<ForecastEntity, Long> {
 
-    int MIN_TEMP = -50;
-    int MAX_TEMP = 50;
-    Random random = new Random();
-
-
-    default void getForecast(CityEntity cityEntity) {
+    default ForecastEntity getForecast(CityEntity cityEntity, int temperature) {
         ForecastEntity forecast = new ForecastEntity();
         forecast.setCity(cityEntity);
-        forecast.setTemperature(random.nextInt(MAX_TEMP - MIN_TEMP + 1) + MIN_TEMP);
+        forecast.setTemperature(temperature);
         forecast.setDate(Timestamp.valueOf(LocalDateTime.now()));
         save(forecast);
+        return forecast;
     }
 }

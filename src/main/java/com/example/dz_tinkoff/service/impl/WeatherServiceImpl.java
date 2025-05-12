@@ -1,12 +1,9 @@
 package com.example.dz_tinkoff.service.impl;
 
-import com.example.dz_tinkoff.dto.CityDto;
 import com.example.dz_tinkoff.dto.ForecastDto;
 import com.example.dz_tinkoff.dto.RequestCounterDto;
 import com.example.dz_tinkoff.entity.CityEntity;
-import com.example.dz_tinkoff.entity.ForecastEntity;
 import com.example.dz_tinkoff.entity.RequestCounterEntity;
-import com.example.dz_tinkoff.mapper.CityMapper;
 import com.example.dz_tinkoff.mapper.ForecastMapper;
 import com.example.dz_tinkoff.mapper.RequestCounterMapper;
 import com.example.dz_tinkoff.repository.CityRepository;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,20 +27,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class WeatherServiceImpl implements WeatherService {
 
     private final CityRepository cityRepository;
-    private final CityMapper cityMapper;
     private final ForecastRepository forecastRepository;
-    private final ForecastMapper forecastMapper;
     private final RequestCounterRepository requestCounterRepository;
     private final RequestCounterMapper requestCounterMapper;
+    private final ForecastMapper forecastMapper;
+    int MIN_TEMP = -50;
+    int MAX_TEMP = 50;
+    Random random = new Random();
 
 
     @Override
     @Transactional
-    public void getForecast(String cityName) {
+    public ForecastDto getForecast(String cityName) {
         cityRepository.addCity(cityName);
         CityEntity cityEntity = cityRepository.getCityByName(cityName);
-        forecastRepository.getForecast(cityEntity);
         requestCounterRepository.updateRequestsByCityId(cityEntity);
+        return forecastMapper.mapToDto(forecastRepository.getForecast
+                (cityEntity, random.nextInt(MAX_TEMP - MIN_TEMP + 1) + MIN_TEMP));
     }
 
     @Override

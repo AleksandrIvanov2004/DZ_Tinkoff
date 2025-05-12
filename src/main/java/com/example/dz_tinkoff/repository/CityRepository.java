@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
-public interface CityRepository extends JpaRepository<CityEntity, Integer> {
+public interface CityRepository extends JpaRepository<CityEntity, Long> {
     @Modifying
     @Query(value = "INSERT INTO city (name) SELECT :name WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = :name)",
             nativeQuery = true)
