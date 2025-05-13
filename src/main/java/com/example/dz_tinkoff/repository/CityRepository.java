@@ -1,37 +1,23 @@
 package com.example.dz_tinkoff.repository;
 
-import com.example.dz_tinkoff.dto.CityDto;
 import com.example.dz_tinkoff.entity.CityEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.List;
-
+import java.util.Optional;
 
 @Repository
-public class CityRepository {
+public interface CityRepository extends JpaRepository<CityEntity, Long> {
+    @Modifying
+    @Query(value = "INSERT INTO city (name) SELECT :name WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = :name)",
+            nativeQuery = true)
+    void addCity(@Param("name") String name);
 
-    private final JdbcTemplate jdbcTemplate;
 
-    public CityRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    private final RowMapper<CityEntity> cityRowMapper = (rs, rowNum) ->
-            new CityEntity(rs.getLong("id"),
-                    rs.getString("name")
-            );
-
-    // Здесь наверное нужно name, в таблице city же поле name, но я не уверен
-    public void addCity(String name){
-        jdbcTemplate.update( "INSERT INTO city (name) " +
-                "SELECT ? WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = ?)", name, name);
-
-    }
-
-    public long getCityIdByName(String name){
-        return jdbcTemplate.queryForObject("SELECT id FROM city WHERE name = ?", Long.class, name);
-    }
+    @Query(value = "SELECT * FROM city WHERE name = :name", nativeQuery = true)
+    CityEntity getCityByName(@Param("name") String name);
 }
