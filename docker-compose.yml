@@ -1,12 +1,48 @@
-version: "3.9"
-
 services:
-
-  local-storage:
-    image: postgres:16-alpine3.19
+  postgres:
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: 'postgres'
-      POSTGRES_PASSWORD: 'sasha2004'
-      POSTGRES_DB: 'weather_db'
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - '5432:5432'
+      - "5438:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d weather_db"] # Исправлен пользователь
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-migration:
+    image: flyway/flyway:9-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/weather_db
+      FLYWAY_USER: postgres
+      FLYWAY_PASSWORD: sasha2004
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+    command: migrate
+
+  app:
+    build: .
+    image: weather-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
