@@ -1,17 +1,19 @@
 package com.example.dz_tinkoff.entity;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.redis.core.RedisHash;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity(name = "forecast")
-public class ForecastEntity {
+public class ForecastEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "bigserial")
