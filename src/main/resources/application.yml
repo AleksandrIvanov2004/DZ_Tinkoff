@@ -13,11 +13,46 @@ spring:
       ddl-auto: validate
   application:
     name: demo
+  cache:
+    type: redis
+    redis:
+      cache-null-values: false
+      time-to-live: 1h
+      enable-statistics: true
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 1s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 1
+        shutdown-timeout: 100ms
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: weather-stats-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      topic:
+        weather-requests: weather-requests
+        popular-city: popular-city-stats
+        peak-hour: peak-hour-stats
 
 logging:
   level:
     org.flywaydb: DEBUG
     org.springframework.jdbc: DEBUG
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG
 
 
 app:

@@ -4,6 +4,7 @@ import com.example.dz_tinkoff.entity.CityEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
+@RedisHash
 public interface CityRepository extends JpaRepository<CityEntity, Long> {
     @Modifying
     @Query(value = "INSERT INTO city (name) SELECT :name WHERE NOT EXISTS (SELECT 1 FROM city WHERE name = :name)",

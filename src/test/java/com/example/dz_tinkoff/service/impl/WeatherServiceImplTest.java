@@ -68,20 +68,6 @@ public class WeatherServiceImplTest {
         verify(cityRepository).getCityByName(cityName);
     }
 
-    @Test
-    void getForecast_ShouldCallUpdateRequestsRepository() {
-        String cityName = "Москва";
-        CityEntity cityEntity = new CityEntity();
-        cityEntity.setName(cityName);
-
-        when(cityRepository.getCityByName(cityName)).thenReturn(cityEntity);
-        when(forecastRepository.getForecast(any(), anyInt()))
-                .thenReturn(new ForecastEntity());
-
-        weatherService.getForecast(cityName);
-
-        verify(requestCounterRepository).updateRequestsByCityId(cityEntity);
-    }
 
     @Test
     void getForecast_ShouldCallGetForecastRepository() {

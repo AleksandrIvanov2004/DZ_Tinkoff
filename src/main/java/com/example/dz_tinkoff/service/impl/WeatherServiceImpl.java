@@ -2,18 +2,27 @@ package com.example.dz_tinkoff.service.impl;
 
 import com.example.dz_tinkoff.dto.ForecastDto;
 import com.example.dz_tinkoff.dto.RequestCounterDto;
+import com.example.dz_tinkoff.dto.WeatherRequestMetadata;
 import com.example.dz_tinkoff.entity.CityEntity;
+import com.example.dz_tinkoff.entity.ForecastEntity;
 import com.example.dz_tinkoff.entity.RequestCounterEntity;
 import com.example.dz_tinkoff.mapper.ForecastMapper;
 import com.example.dz_tinkoff.mapper.RequestCounterMapper;
 import com.example.dz_tinkoff.repository.CityRepository;
 import com.example.dz_tinkoff.repository.ForecastRepository;
 import com.example.dz_tinkoff.repository.RequestCounterRepository;
+import com.example.dz_tinkoff.service.KafkaWeatherEventService;
+import com.example.dz_tinkoff.service.TemperatureService;
 import com.example.dz_tinkoff.service.WeatherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -31,25 +40,39 @@ public class WeatherServiceImpl implements WeatherService {
     private final RequestCounterRepository requestCounterRepository;
     private final RequestCounterMapper requestCounterMapper;
     private final ForecastMapper forecastMapper;
-    int MIN_TEMP = -50;
-    int MAX_TEMP = 50;
-    Random random = new Random();
+    private final TemperatureService temperatureService;
+    private final KafkaWeatherEventService kafkaWeatherEventService;
 
 
     @Override
     @Transactional
     public ForecastDto getForecast(String cityName) {
+        // Всегда получаем актуальные данные города
         cityRepository.addCity(cityName);
         CityEntity cityEntity = cityRepository.getCityByName(cityName);
-        requestCounterRepository.updateRequestsByCityId(cityEntity);
-        return forecastMapper.mapToDto(forecastRepository.getForecast
-                (cityEntity, random.nextInt(MAX_TEMP - MIN_TEMP + 1) + MIN_TEMP));
+
+        // Берем температуру из кеша
+        int temperature = temperatureService.getCachedTemperature(cityName);
+
+        // Создаем новый прогноз с текущей датой
+        ForecastEntity forecast = new ForecastEntity();
+        forecast.setCity(cityEntity);
+        forecast.setTemperature(temperature);
+        forecast.setDate(Timestamp.valueOf(LocalDateTime.now()));
+
+        WeatherRequestMetadata metadata = new WeatherRequestMetadata(
+                cityName,
+                Instant.now()
+        );
+        kafkaWeatherEventService.publishWeatherRequest(cityName, metadata);
+
+        return forecastMapper.mapToDto(forecastRepository.save(forecast));
     }
+
 
     @Override
     public List<RequestCounterDto> getRequestCounters() {
-        List<RequestCounterEntity> requestCounterEntities = requestCounterRepository.findAll();
-        return requestCounterEntities.stream()
+        return requestCounterRepository.findAll().stream()
                 .map(requestCounterMapper::mapToDto)
                 .collect(Collectors.toList());
     }

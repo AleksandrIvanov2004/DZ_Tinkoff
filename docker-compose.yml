@@ -1,16 +1,18 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: weather_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sasha2004
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5438:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d weather_db"] # Исправлен пользователь
+      test: ["CMD-SHELL", "pg_isready -U postgres -d weather_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -29,16 +31,75 @@ services:
       FLYWAY_BASELINE_ON_MIGRATE: "true"
     command: migrate
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redpanda:
+    image: redpandadata/redpanda:v23.1.8
+    container_name: redpanda
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    command:
+      - redpanda start
+      - --overprovisioned
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:9092
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.4.1
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://redpanda:9092"
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   app:
     build: .
     image: weather-app
     depends_on:
+      redis:
+        condition: service_healthy
       postgres:
         condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/weather_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: sasha2004
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
     ports:
       - "8080:8080"
     volumes:
@@ -46,3 +107,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  redpanda_data:
