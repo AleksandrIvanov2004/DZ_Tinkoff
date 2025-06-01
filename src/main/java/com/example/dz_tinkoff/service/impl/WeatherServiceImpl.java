@@ -2,6 +2,7 @@ package com.example.dz_tinkoff.service.impl;
 
 import com.example.dz_tinkoff.dto.ForecastDto;
 import com.example.dz_tinkoff.dto.RequestCounterDto;
+import com.example.dz_tinkoff.dto.WeatherRequestMetadata;
 import com.example.dz_tinkoff.entity.CityEntity;
 import com.example.dz_tinkoff.entity.ForecastEntity;
 import com.example.dz_tinkoff.entity.RequestCounterEntity;
@@ -10,6 +11,7 @@ import com.example.dz_tinkoff.mapper.RequestCounterMapper;
 import com.example.dz_tinkoff.repository.CityRepository;
 import com.example.dz_tinkoff.repository.ForecastRepository;
 import com.example.dz_tinkoff.repository.RequestCounterRepository;
+import com.example.dz_tinkoff.service.KafkaWeatherEventService;
 import com.example.dz_tinkoff.service.TemperatureService;
 import com.example.dz_tinkoff.service.WeatherService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,7 @@ public class WeatherServiceImpl implements WeatherService {
     private final RequestCounterMapper requestCounterMapper;
     private final ForecastMapper forecastMapper;
     private final TemperatureService temperatureService;
+    private final KafkaWeatherEventService kafkaWeatherEventService;
 
 
     @Override
@@ -55,6 +59,12 @@ public class WeatherServiceImpl implements WeatherService {
         forecast.setCity(cityEntity);
         forecast.setTemperature(temperature);
         forecast.setDate(Timestamp.valueOf(LocalDateTime.now()));
+
+        WeatherRequestMetadata metadata = new WeatherRequestMetadata(
+                cityName,
+                Instant.now()
+        );
+        kafkaWeatherEventService.publishWeatherRequest(cityName, metadata);
 
         return forecastMapper.mapToDto(forecastRepository.save(forecast));
     }

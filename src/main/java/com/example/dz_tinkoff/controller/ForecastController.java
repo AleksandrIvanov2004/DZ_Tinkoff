@@ -29,36 +29,14 @@ public class ForecastController {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    private String weatherRequestsTopic = "weather-requests";
     @GetMapping("/forecast/{cityName}")
     public ForecastDto getForecast(@PathVariable @NotBlank(message = "Название города не может быть пустым")
                                 @Pattern(regexp = "[а-яА-ЯёЁ\\s-]+",
             message = "Некорректное название города") String cityName){
         ForecastDto forecast = weatherService.getForecast(cityName);
 
-        WeatherRequestMetadata metadata = new WeatherRequestMetadata(
-                cityName,
-                Instant.now()
-        );
-
-        try {
-            kafkaTemplate.send(
-                    weatherRequestsTopic,
-                    cityName,
-                    objectMapper.writeValueAsString(metadata)
-            );
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize request metadata", e);
-        }
-
         return forecast;
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class WeatherRequestMetadata {
-        private String city;
-        private Instant requestTime;
-    }
 }
 

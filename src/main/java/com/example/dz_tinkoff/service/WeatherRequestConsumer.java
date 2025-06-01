@@ -1,16 +1,15 @@
 package com.example.dz_tinkoff.service;
 
-import com.example.dz_tinkoff.controller.ForecastController;
+import com.example.dz_tinkoff.dto.PeakHourStats;
+import com.example.dz_tinkoff.dto.PopularCityStats;
+import com.example.dz_tinkoff.dto.WeatherRequestMetadata;
 import com.example.dz_tinkoff.entity.CityEntity;
 import com.example.dz_tinkoff.entity.RequestCounterEntity;
 import com.example.dz_tinkoff.repository.CityRepository;
 import com.example.dz_tinkoff.repository.RequestCounterRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -37,9 +36,9 @@ public class WeatherRequestConsumer {
     @KafkaListener(topics = "weather-requests")
     public void consumeWeatherRequest(String message) {
         try {
-            ForecastController.WeatherRequestMetadata metadata = objectMapper.readValue(
+            WeatherRequestMetadata metadata = objectMapper.readValue(
                     message,
-                    ForecastController.WeatherRequestMetadata.class
+                    WeatherRequestMetadata.class
             );
 
             CityEntity city = cityRepository.getCityByName(metadata.getCity());
@@ -59,9 +58,8 @@ public class WeatherRequestConsumer {
         }
     }
 
-    Timestamp monthAgo = Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS));
-
     private void calculateAndSendStats() {
+        Timestamp monthAgo = Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS));
         String popularCity = requestCounterRepository.findMostPopularCityLastMonth(monthAgo)
                 .orElse("No data");
 
@@ -83,19 +81,8 @@ public class WeatherRequestConsumer {
                 );
             }
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize stats", e);
+            log.error("Ошибка с сериализацией статистики", e);
         }
     }
 
-    @Data
-    @AllArgsConstructor
-    private static class PopularCityStats {
-        private String city;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class PeakHourStats {
-        private int hour;
-    }
 }

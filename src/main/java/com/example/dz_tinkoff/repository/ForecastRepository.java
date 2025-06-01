@@ -11,7 +11,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Repository
-@RedisHash
 public interface ForecastRepository extends JpaRepository<ForecastEntity, Long> {
 
     default ForecastEntity getForecast(CityEntity cityEntity, int temperature) {

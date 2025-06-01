@@ -3,7 +3,9 @@ package com.example.dz_tinkoff.config;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import io.lettuce.core.TimeoutOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -19,34 +21,17 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import java.time.Duration;
 
 @Configuration
+@EnableCaching
 public class RedisConfig {
 
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration();
-        serverConfig.setHostName("redis");  // Или "localhost" для локального Redis
-        serverConfig.setPort(6379);
-
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofSeconds(2))
-                .clientOptions(ClientOptions.builder()
-                        .autoReconnect(true)
-                        .pingBeforeActivateConnection(true)
-                        .timeoutOptions(TimeoutOptions.enabled(Duration.ofSeconds(1)))
-                        .socketOptions(SocketOptions.builder()
-                                .connectTimeout(Duration.ofSeconds(1))
-                                .build())
-                        .build())
-                .build();
-
-        return new LettuceConnectionFactory(serverConfig, clientConfig);
-    }
+    @Value("${spring.cache.redis.time-to-live}")
+    private Duration cacheTtl;
 
     @Bean
     @Primary
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1))
+                .entryTtl(cacheTtl)
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new GenericJackson2JsonRedisSerializer()));
