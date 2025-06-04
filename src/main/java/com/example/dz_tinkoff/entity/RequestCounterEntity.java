@@ -19,7 +19,7 @@ public class RequestCounterEntity {
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "city_id")
+    @JoinColumn(name = "city_id", referencedColumnName = "id")
     private CityEntity city;
 
     @Column(name = "request_count")

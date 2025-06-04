@@ -32,6 +32,7 @@ public class WeatherRequestConsumerServiceImpl implements WeatherRequestConsumer
     private String popularCityTopic = "popular-city-stats";
     private String peakHourTopic = "peak-hour-stats";
 
+    @Transactional
     @Override
     @KafkaListener(topics = "weather-requests")
     public void consumeWeatherRequest(String message) {
@@ -45,14 +46,14 @@ public class WeatherRequestConsumerServiceImpl implements WeatherRequestConsumer
             CityEntity city = cityRepository.getCityByName(metadata.getCity());
             log.info("Id города: {}", city.getId());
             RequestCounterEntity counter = requestCounterRepository.findById(city.getId())
-                    .orElse(new RequestCounterEntity(city.getId(), city, 0, null));
+                    .orElseGet(() -> {
+                        RequestCounterEntity newCounter = new RequestCounterEntity();
+                        newCounter.setCity(city);
+                        return requestCounterRepository.save(newCounter);
+                    });
 
             counter.setRequestCount(counter.getRequestCount() + 1);
-            log.info("Увеличили на 1");
-            counter.setLastAccessDatetime(Timestamp.from(metadata.getRequestTime()));
-            log.info("Добавили дату");
-            requestCounterRepository.save(counter);
-            log.info("Сохранили");
+            counter.setLastAccessDatetime(new Timestamp(System.currentTimeMillis()));
 
             calculateAndSendStats();
 
