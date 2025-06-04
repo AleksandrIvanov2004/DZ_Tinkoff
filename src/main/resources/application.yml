@@ -49,10 +49,13 @@ spring:
 
 logging:
   level:
+    com.example.dz_tinkoff: DEBUG
+    org.springframework.web: DEBUG
     org.flywaydb: DEBUG
     org.springframework.jdbc: DEBUG
     org.springframework.cache: DEBUG
     org.springframework.data.redis.cache: DEBUG
+    org.springframework.kafka: DEBUG
 
 
 app:
