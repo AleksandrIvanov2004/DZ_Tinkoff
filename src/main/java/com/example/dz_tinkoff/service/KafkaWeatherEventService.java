@@ -1,7 +1,7 @@
 package com.example.dz_tinkoff.service;
 
-import com.example.dz_tinkoff.dto.WeatherRequestMetadata;
+import com.example.dz_tinkoff.dto.WeatherRequestMetadataDto;
 
 public interface KafkaWeatherEventService {
-    public void publishWeatherRequest(String cityName, WeatherRequestMetadata metadata);
+    void publishWeatherRequest(String cityName, WeatherRequestMetadataDto metadata);
 }

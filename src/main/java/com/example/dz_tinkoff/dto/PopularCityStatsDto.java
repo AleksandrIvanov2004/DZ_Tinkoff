@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public final class PeakHourStats {
-    private int hour;
+public final class PopularCityStatsDto {
+    private String city;
 }

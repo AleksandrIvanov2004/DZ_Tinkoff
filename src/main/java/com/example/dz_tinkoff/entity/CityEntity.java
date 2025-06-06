@@ -14,4 +14,10 @@ public class CityEntity {
     @Column(columnDefinition = "bigserial")
     private Long id;
     private String name;
+
+    @Column(name = "coord_x")
+    private Double coordX;
+
+    @Column(name = "coord_y")
+    private Double coordY;
 }

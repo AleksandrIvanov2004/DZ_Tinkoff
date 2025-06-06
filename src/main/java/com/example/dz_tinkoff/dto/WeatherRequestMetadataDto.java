@@ -7,7 +7,7 @@ import java.time.Instant;
 
 @Data
 @AllArgsConstructor
-public final class WeatherRequestMetadata {
+public final class WeatherRequestMetadataDto {
     private String city;
     private Instant requestTime;
 }

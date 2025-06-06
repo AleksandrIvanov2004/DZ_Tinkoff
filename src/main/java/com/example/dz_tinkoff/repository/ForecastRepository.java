@@ -12,13 +12,4 @@ import java.time.LocalDateTime;
 
 @Repository
 public interface ForecastRepository extends JpaRepository<ForecastEntity, Long> {
-
-    default ForecastEntity getForecast(CityEntity cityEntity, int temperature) {
-        ForecastEntity forecast = new ForecastEntity();
-        forecast.setCity(cityEntity);
-        forecast.setTemperature(temperature);
-        forecast.setDate(Timestamp.valueOf(LocalDateTime.now()));
-        save(forecast);
-        return forecast;
-    }
 }

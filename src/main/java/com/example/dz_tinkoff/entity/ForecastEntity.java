@@ -23,6 +23,9 @@ public class ForecastEntity implements Serializable {
     @JoinColumn(name = "city_id")
     private CityEntity city;
 
-    private int temperature;
+    private Double temperature;
     private Timestamp date;
+
+    @Column(name = "wind_speed")
+    private Double windSpeed;
 }
